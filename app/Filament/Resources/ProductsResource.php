@@ -116,18 +116,18 @@ class ProductsResource extends Resource
                     ->searchable(),
                 Tables\Columns\ImageColumn::make('image'),
                 Tables\Columns\TextColumn::make('gasCategory.name')
-                ->label('Gas Category'),
+                    ->label('Gas Category'),
                 Tables\Columns\TextColumn::make('slug')
                     ->label('Unique ID')
                     ->searchable(),
-                    Tables\Columns\TextColumn::make('price')
+                Tables\Columns\TextColumn::make('price')
                     ->searchable()
                     ->money('LKR')
                     ->sortable(),
-                    Tables\Columns\TextColumn::make('weight')
+                Tables\Columns\TextColumn::make('weight')
                     ->searchable()
                     ->sortable(),
-                    Tables\Columns\TextColumn::make('description')
+                Tables\Columns\TextColumn::make('description')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('is_active')
@@ -147,15 +147,15 @@ class ProductsResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('gasCategory')
-                ->label('Gas Category')
-                ->relationship('gasCategory','name'),
-            //     SelectFilter::make('ActiveGas')
-            //     ->label('Active Gas')
-            //     ->options([
-            //         '1' => 'Active',
-            //         '0' => 'Inactive',
-            //     ])
-            //     ->query(fn ($query) => $query->where('is_active', request()->input('tableFilters.ActiveGas'))),
+                    ->label('Gas Category')
+                    ->relationship('gasCategory', 'name'),
+                //     SelectFilter::make('ActiveGas')
+                //     ->label('Active Gas')
+                //     ->options([
+                //         '1' => 'Active',
+                //         '0' => 'Inactive',
+                //     ])
+                //     ->query(fn ($query) => $query->where('is_active', request()->input('tableFilters.ActiveGas'))),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
