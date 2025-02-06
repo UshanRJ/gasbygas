@@ -15,8 +15,8 @@ class Products extends Model
         'image' => 'array'
     ];
 
-    public function gasCategry(){
-        return $this->belongsTo(GasCategory::class);
+    public function gasCategory(){
+        return $this->belongsTo(GasCategory::class,'category_id');
     }
 
     public function orderItem(){

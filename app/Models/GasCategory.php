@@ -9,9 +9,10 @@ class GasCategory extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name','slug','image','is_active'];
+    protected $fillable = ['name', 'slug', 'image', 'is_active'];
 
-    public function products(){
+    public function products()
+    {
         return $this->hasMany(Products::class);
     }
 }
