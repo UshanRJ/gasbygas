@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\OrderResource\Pages;
+use App\Filament\Resources\OrderResource\RelationManagers\AddressRelationManager;
 use App\Models\Products;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
@@ -11,6 +12,7 @@ use Filament\Forms\Components\Section;
 use App\Filament\Resources\OrderResource\RelationManagers;
 use App\Models\Order;
 use App\Models\User;
+use App\Models\DeliveryStock;
 use Filament\Forms;
 use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Select;
@@ -32,7 +34,8 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Number;
 use PhpParser\Node\Stmt\Label;
@@ -42,6 +45,13 @@ class OrderResource extends Resource
     protected static ?string $model = Order::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+
+    // Method to generate unique ID for each order item
+    protected static function generateUniqueId()
+    {
+        // Generate a unique identifier, here we're using a combination of a timestamp and a random string.
+        return Str::uuid()->toString();
+    }
 
     public static function form(Form $form): Form
     {
@@ -61,6 +71,38 @@ class OrderResource extends Resource
                                     $query->whereIn('status', ['new', 'processing', 'rescheduled']);
                                 })->pluck('name', 'id');
                             }),
+                        Select::make('district')
+                            ->label('District')
+                            ->required()
+                            ->options([
+                                'Ampara' => 'Ampara',
+                                'Anuradhapura' => 'Anuradhapura',
+                                'Badulla' => 'Badulla',
+                                'Batticaloa' => 'Batticaloa',
+                                'Colombo' => 'Colombo',
+                                'Galle' => 'Galle',
+                                'Gampaha' => 'Gampaha',
+                                'Hambantota' => 'Hambantota',
+                                'Jaffna' => 'Jaffna',
+                                'Kalutara' => 'Kalutara',
+                                'Kandy' => 'Kandy',
+                                'Kegalle' => 'Kegalle',
+                                'Kilinochchi' => 'Kilinochchi',
+                                'Kurunegala' => 'Kurunegala',
+                                'Mannar' => 'Mannar',
+                                'Matale' => 'Matale',
+                                'Matara' => 'Matara',
+                                'Monaragala' => 'Monaragala',
+                                'Mullaitivu' => 'Mullaitivu',
+                                'Nuwara Eliya' => 'Nuwara Eliya',
+                                'Polonnaruwa' => 'Polonnaruwa',
+                                'Puttalam' => 'Puttalam',
+                                'Ratnapura' => 'Ratnapura',
+                                'Trincomalee' => 'Trincomalee',
+                                'Vavuniya' => 'Vavuniya',
+                            ])
+                            ->searchable()
+                            ->preload(),
                         Select::make('payment_method')
                             ->label('Payment Method')
                             ->options(
@@ -81,6 +123,8 @@ class OrderResource extends Resource
                             )
                             ->required()
                             ->default('pending'),
+
+
                         ToggleButtons::make('status')
                             ->inline()
                             ->default('new')
@@ -91,7 +135,7 @@ class OrderResource extends Resource
                                 'delivered' => 'success',
                                 'cancelled' => 'danger',
                                 'rescheduled' => 'warning',
-                            ])
+                            ])->columnSpan('2')
                             ->icons([
                                 'new' => 'heroicon-m-sparkles',
                                 'processing' => 'heroicon-m-arrow-path',
@@ -151,6 +195,30 @@ class OrderResource extends Resource
                                         ->columnSpan(2)
                                         ->reactive()
                                         ->afterStateUpdated(fn($state, Set $set, Get $get) => $set('total_amount', $state * $get('unit_amount'))),
+                                    // Add the scheduled_date field
+                                    TextInput::make('scheduled_date')
+                                        ->label('Scheduled Date')
+                                        ->type('date')
+                                        ->required()
+                                        ->reactive()
+                                        ->columnSpan(2)
+                                        ->extraAttributes([
+                                            'min' => Carbon::now()->format('Y-m-d'), // Today's date as the minimum
+                                            'max' => Carbon::now()->addDays(14)->format('Y-m-d'), // 14 days from today as the maximum
+                                        ])
+                                        ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                                            $minDate = Carbon::now()->format('Y-m-d'); // Today's date
+                                            $maxDate = Carbon::now()->addDays(14)->format('Y-m-d'); // 14 days from today
+                                
+                                            // Validate selected date
+                                            if ($state < $minDate || $state > $maxDate) {
+                                                Notification::make()
+                                                    ->title("Scheduled date must be within the next 14 days from today.")
+                                                    ->danger()
+                                                    ->send();
+                                                $set('scheduled_date', null); // Reset invalid value
+                                            }
+                                        }),
                                     TextInput::make('unit_amount')
                                         ->numeric()
                                         ->required()
@@ -161,7 +229,11 @@ class OrderResource extends Resource
                                         ->numeric()
                                         ->required()
                                         ->dehydrated()
-                                        ->columnSpan(4)
+                                        ->columnSpan(2),
+                                    // Add the unique ID field here
+                                    Hidden::make('order_token')
+                                        ->default(fn() => static::generateUniqueId())
+                                        ->dehydrated(),
                                 ])->columns(12),
                             Placeholder::make('grand_total')
                                 ->label('Grand Total')
@@ -227,6 +299,17 @@ class OrderResource extends Resource
                     ->default('pending') // Optional: Sets a default value
                     ->afterStateUpdated(fn($state, $record) => $record->save()),// Auto-save after change
 
+                SelectColumn::make('cylinder_status')
+                    ->label('Cylinder Status')
+                    ->options([
+                        'pending' => '🟡 Pending',
+                        'completed' => '🟢 Completed',
+                    ])
+                    ->sortable()
+                    ->searchable()
+                    ->default('pending') // Optional: Sets a default value
+                    ->afterStateUpdated(fn($state, $record) => $record->save()),// Auto-save after change
+
                 TextColumn::make('shipping_method')
                     ->label('Shipping Method')
                     ->toggleable(isToggledHiddenByDefault: true)
@@ -258,6 +341,10 @@ class OrderResource extends Resource
                 TextColumn::make('notes')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('orderItems.order_token')
+                    ->label('Order Token')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -287,7 +374,7 @@ class OrderResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            AddressRelationManager::class,
         ];
     }
 
@@ -311,4 +398,24 @@ class OrderResource extends Resource
     {
         return static::getModel()::whereIn('status', ['rescheduled', 'pending', 'new'])->count();
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+    
+        static::created(function () {
+            DeliveryStock::generateDeliveryStocks();
+        });
+    
+        static::updated(function () {
+            DeliveryStock::generateDeliveryStocks();
+        });
+    
+        static::deleted(function () {
+            DeliveryStock::generateDeliveryStocks();
+        });
+    }
+    
+
+
 }
