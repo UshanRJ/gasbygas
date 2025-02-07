@@ -44,7 +44,10 @@ class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
 
+    // protected static ?string $recordTitleAttribute = 'orderItems.product.name';
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+
+    protected static ?int $navigationSort = 4;
 
     // Method to generate unique ID for each order item
     protected static function generateUniqueId()
