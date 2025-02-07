@@ -399,23 +399,6 @@ class OrderResource extends Resource
         return static::getModel()::whereIn('status', ['rescheduled', 'pending', 'new'])->count();
     }
 
-    protected static function boot()
-    {
-        parent::boot();
-    
-        static::created(function () {
-            DeliveryStock::generateDeliveryStocks();
-        });
-    
-        static::updated(function () {
-            DeliveryStock::generateDeliveryStocks();
-        });
-    
-        static::deleted(function () {
-            DeliveryStock::generateDeliveryStocks();
-        });
-    }
-    
 
 
 }
