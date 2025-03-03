@@ -82,10 +82,7 @@ class OutletsResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->actions([            
                 // Simple view stock action that opens a modal
                 Tables\Actions\Action::make('viewStock')
                     ->label('View Stock')
@@ -152,7 +149,14 @@ class OutletsResource extends Resource
 
                         return new \Illuminate\Support\HtmlString($html);
                     })
-                    ->modalSubmitAction(false)
+                    ->modalSubmitAction(false),
+
+                    Tables\Actions\ActionGroup::make([
+                        Tables\Actions\ViewAction::make(),
+                        Tables\Actions\EditAction::make(),
+                        Tables\Actions\DeleteAction::make(),
+                        ]),
+                        
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

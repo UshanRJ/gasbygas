@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\OrderResource\Pages;
 use App\Filament\Resources\OrderResource\RelationManagers\AddressRelationManager;
 use App\Models\Products;
+use App\Models\OutletProduct;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
@@ -74,38 +75,13 @@ class OrderResource extends Resource
                                     $query->whereIn('status', ['new', 'processing', 'rescheduled']);
                                 })->pluck('name', 'id');
                             }),
-                        Select::make('district')
-                            ->label('District')
+                        Select::make('outlet_id')
+                            ->label('Outlet')
+                            ->relationship('outlet', 'name')
                             ->required()
-                            ->options([
-                                'Ampara' => 'Ampara',
-                                'Anuradhapura' => 'Anuradhapura',
-                                'Badulla' => 'Badulla',
-                                'Batticaloa' => 'Batticaloa',
-                                'Colombo' => 'Colombo',
-                                'Galle' => 'Galle',
-                                'Gampaha' => 'Gampaha',
-                                'Hambantota' => 'Hambantota',
-                                'Jaffna' => 'Jaffna',
-                                'Kalutara' => 'Kalutara',
-                                'Kandy' => 'Kandy',
-                                'Kegalle' => 'Kegalle',
-                                'Kilinochchi' => 'Kilinochchi',
-                                'Kurunegala' => 'Kurunegala',
-                                'Mannar' => 'Mannar',
-                                'Matale' => 'Matale',
-                                'Matara' => 'Matara',
-                                'Monaragala' => 'Monaragala',
-                                'Mullaitivu' => 'Mullaitivu',
-                                'Nuwara Eliya' => 'Nuwara Eliya',
-                                'Polonnaruwa' => 'Polonnaruwa',
-                                'Puttalam' => 'Puttalam',
-                                'Ratnapura' => 'Ratnapura',
-                                'Trincomalee' => 'Trincomalee',
-                                'Vavuniya' => 'Vavuniya',
-                            ])
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->live(),
                         Select::make('payment_method')
                             ->label('Payment Method')
                             ->options(
@@ -179,16 +155,56 @@ class OrderResource extends Resource
                                 ->maxItems(1)
                                 ->schema([
                                     Select::make('product_id')
-                                        ->relationship('product', 'name')
+                                        ->label('Product')
+                                        ->options(function (Get $get) {
+                                            $outletId = $get('../../outlet_id');
+
+                                            if (!$outletId) {
+                                                return [];
+                                            }
+
+                                            // Get products with stock > 1 for the selected outlet
+                                            $availableProducts = \App\Models\OutletProduct::where('outlet_id', $outletId)
+                                                ->where('stock', '>', 1)
+                                                ->with('product')
+                                                ->get()
+                                                ->pluck('product.name', 'product_id');
+
+                                            return $availableProducts;
+                                        })
                                         ->searchable()
-                                        ->preload()
                                         ->required()
                                         ->distinct()
                                         ->disableOptionsWhenSelectedInSiblingRepeaterItems()
                                         ->columnSpan(4)
                                         ->reactive()
-                                        ->afterStateUpdated(fn($state, Set $set) => $set('unit_amount', Products::find($state)?->price ?? 0))
-                                        ->afterStateUpdated(fn($state, Set $set) => $set('total_amount', Products::find($state)?->price ?? 0)),
+                                        ->live()
+                                        ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                                            // Get the product price
+                                            $productPrice = Products::find($state)?->price ?? 0;
+                                            $set('unit_amount', $productPrice);
+
+                                            // Calculate total amount
+                                            $quantity = $get('quantity') ?? 1;
+                                            $set('total_amount', $quantity * $productPrice);
+
+                                            // Get the available stock for this product at the selected outlet
+                                            $outletId = $get('../../outlet_id');
+                                            $outletProduct = \App\Models\OutletProduct::where([
+                                                'outlet_id' => $outletId,
+                                                'product_id' => $state
+                                            ])->first();
+
+                                            // Set max quantity based on available stock
+                                            if ($outletProduct) {
+                                                $maxStock = $outletProduct->stock;
+                                                // Ensure quantity doesn't exceed available stock
+                                                if ($get('quantity') > $maxStock) {
+                                                    $set('quantity', $maxStock);
+                                                    $set('total_amount', $maxStock * $productPrice);
+                                                }
+                                            }
+                                        }),
                                     TextInput::make('quantity')
                                         ->numeric()
                                         ->required()
@@ -255,7 +271,6 @@ class OrderResource extends Resource
                         ]
                     )
                 ])->columnSpanFull()
-
             ]);
     }
 
@@ -269,6 +284,10 @@ class OrderResource extends Resource
                 TextColumn::make('orderItems.product.name')
                     ->label('Ordered Item')
                     ->searchable(),
+                TextColumn::make('outlet.name')
+                    ->label('Outlet')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('price')
                     ->searchable()
                     ->money('LKR')
@@ -364,7 +383,7 @@ class OrderResource extends Resource
                 Tables\Actions\ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
-                    DeleteAction::make()
+                    // DeleteAction::make()
                 ]),
             ])
             ->bulkActions([

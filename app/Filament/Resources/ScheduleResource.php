@@ -119,6 +119,7 @@ class ScheduleResource extends Resource
                     ->options([
                         'pending' => '🟡 Pending',
                         'approved' => '🟢 Approved',
+                        'cancelled' => '🔴 Cancelled',
                     ])
                     ->sortable()
                     ->searchable()
@@ -134,18 +135,18 @@ class ScheduleResource extends Resource
                         //         'outlet_id' => $record->outlet_id,
                         //         'product_id' => $record->product_id,
                         //     ]);
-
+            
                         //     // If this is a new record, set initial stock to 0
                         //     if (!$outletProduct->exists) {
                         //         $outletProduct->stock = 0;
                         //     }
-
+            
                         //     // Add schedule quantity to stock
                         //     $outletProduct->stock += $record->quantity;
-
+            
                         //     // Save the outlet product
                         //     $outletProduct->save();
-
+            
                         //     // Show notification
                         //     \Filament\Notifications\Notification::make()
                         //         ->title('Stock Updated')
@@ -175,6 +176,8 @@ class ScheduleResource extends Resource
                     ViewAction::make(),
                     EditAction::make(),
                     DeleteAction::make()
+                        ->disabled(fn($record) => $record->status === 'approved')
+                        ->tooltip(fn($record) => $record->status === 'approved' ? 'Approved schedules cannot be deleted' : null)
                 ]),
             ])
             ->bulkActions([
