@@ -3,60 +3,62 @@
 namespace App\Livewire\Auth;
 
 use App\Models\User;
+use App\Models\Role;
 use Livewire\Component;
-use Livewire\Attributes\Title;
+use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\Registered;
 
 #[Title('Sign Up Page - GasByGas')]
+
 class RegisterPage extends Component
 {
-    public $first_name;
-    public $last_name;
-    public $email;
-    public $address;
-    public $mobile;
-    public $user_type;
-    public $nic;
-    public $business_id;
+    use WithFileUploads;
+
+    public $first_name = '';
+    public $last_name = '';
+    public $email = '';
+    public $address = '';
+    public $mobile = '';
+    public $user_type = 'personal';
+    public $nic = '';
+    public $business_id = '';
     public $certificate;
-    public $password;
-    public $confirm_password;
-    public $showPassword = false;
-    public $showConfirmPassword = false;
+    public $password = '';
+    public $password_confirmation = '';
 
-    protected $rules = [
-        'password' => 'required|min:8',
-        'confirm_password' => 'required|same:password',
-    ];
-
-    public function togglePassword()
+    protected function rules()
     {
-        $this->showPassword = !$this->showPassword;
-    }
-
-    public function toggleConfirmPassword()
-    {
-        $this->showConfirmPassword = !$this->showConfirmPassword;
-    }
-
-    public function save()
-    {
-        // Validate
-        $this->validate([
+        $rules = [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
-            'address' => 'required|string|max:500',
-            'mobile' => 'required|digits_between:10,15',
-            'user_type' => 'required',
-            'nic' => 'required_if:user_type,personal',
-            'business_id' => 'required_if:user_type,business',
-            'certificate' => 'required_if:user_type,business|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'password' => 'required|string|min:8|confirmed',
-            'confirm_password' => 'required|string|min:8'
-        ]);
+            'email' => 'required|string|email|max:255|unique:users',
+            'address' => 'required|string|max:255',
+            'mobile' => 'required|string|max:20',
+            'user_type' => 'required|in:personal,business',
+            'password' => 'required|string|confirmed|min:8',
+        ];
 
-        // Create a new user in the database
+        if ($this->user_type === 'personal') {
+            $rules['nic'] = 'required|string|max:20';
+        } else {
+            $rules['business_id'] = 'required|string|max:50';
+            $rules['certificate'] = 'required|file|mimes:pdf,jpg,jpeg,png|max:2048';
+        }
+
+        return $rules;
+    }
+
+    public function register()
+    {
+        $this->validate();
+
+        $certificatePath = null;
+        if ($this->user_type === 'business' && $this->certificate) {
+            $certificatePath = $this->certificate->store('certificates', 'public');
+        }
+
         $user = User::create([
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
@@ -66,20 +68,40 @@ class RegisterPage extends Component
             'user_type' => $this->user_type,
             'nic' => $this->user_type === 'personal' ? $this->nic : null,
             'business_id' => $this->user_type === 'business' ? $this->business_id : null,
-            'certificate' => $this->user_type === 'business' ? ($certificatePath ?? null) : null,
+            'certificate' => $this->user_type === 'business' ? $certificatePath : null,
             'password' => Hash::make($this->password),
         ]);
 
-        // Login using the user
-        auth()->login($user);
+        // Assign role based on user type
+        $roleSlug = $this->user_type === 'personal' ? 'personal-customer' : 'business-customer';
+        $role = Role::where('slug', $roleSlug)->first();
+        
+        if ($role) {
+            $user->roles()->attach($role->id);
+        }
 
-        // redirect to home page
-        return redirect()->intended();
+        event(new Registered($user));
 
+        Auth::login($user);
+
+        // Redirect based on user type
+        if ($user->isPersonalCustomer()) {
+            return redirect()->route('personal.dashboard');
+        } elseif ($user->isBusinessCustomer()) {
+            return redirect()->route('business.dashboard');
+        }
+
+        return redirect()->route('home');
+    }
+
+    public function updated($propertyName)
+    {
+        $this->validateOnly($propertyName);
     }
 
     public function render()
     {
-        return view('livewire.auth.register-page');
+        return view('livewire.auth.register-page')
+            ->layout('layouts.guest-page');
     }
 }

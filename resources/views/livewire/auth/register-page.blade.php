@@ -1,292 +1,276 @@
-<div class="w-full max-w-[100rem] py-10 px-8 sm:px-10 lg:px-10 mx-auto">
-  <div class="flex h-full items-center">
-  <main class="w-full max-w-5xl lg:w-3/4 mx-auto p-4">
-      <div class="bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-gray-800 dark:border-gray-700">
-        <div class="p-4 sm:p-7">
-          <div class="text-center">
-            <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">Sign up</h1>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Already have an account?
-              <a wire:navigate
-                class="text-blue-600 decoration-2 hover:underline font-medium dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                href="/login">
-                Sign in here
-              </a>
-            </p>
-          </div>
-          <hr class="my-5 border-slate-300">
-          <!-- Form -->
-          <form wire:submit.prevent='save' >
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-<!-- First Name -->
-<div class="relative mt-4">
-    <label for="first_name" class="block text-sm mb-2 dark:text-white">First Name</label>
-    <div class="relative">
-        <input type="text" id="first_name" wire:model="first_name"
-            class="py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600"
-            aria-describedby="first_name-error">
-
-        <!-- Error Icon -->
-        @error('first_name')
-            <div class="absolute inset-y-0 right-3 flex items-center">
-                <svg class="h-5 w-5 text-red-500" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"
-                    aria-hidden="true">
-                    <path
-                        d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
-                </svg>
-            </div>
-        @enderror
-    </div>
-
-    <!-- Error Message -->
-    @error('first_name')
-        <p class="text-xs text-red-600 mt-2" id="first_name-error">{{ $message }}</p>
-    @enderror
-</div>
-
-
-
-              <!-- Last Name -->
-              <div class="relative mt-4">
-                <label for="last_name" class="block text-sm mb-2 dark:text-white">Last Name</label>
-                <div class="relative">
-                  <input type="text" id="last_name" wire:model="last_name"
-                    class="py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600"
-                    aria-describedby="email-error">
-
-                  @error('last_name')
-            <div class="absolute inset-y-0 end-0 flex items-center pe-3">
-            <svg class="h-5 w-5 text-red-500" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"
-              aria-hidden="true">
-              <path
-              d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
-            </svg>
-            </div>
-          @enderror
-
-
-                  @error('last_name')
-            <p class="text-xs text-red-600 mt-2" id="last_name-error">{{ $message }}</p>
-          @enderror
+{{-- resources/views/livewire/auth/register.blade.php --}}
+<div>
+    <div class="min-h-screen bg-gray-100 flex flex-col justify-center py-8 sm:px-6 lg:px-8">
+        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="text-center">
+                <div class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
                 </div>
-              </div>
-
-              <!-- Email -->
-              <div class="relative mt-4">
-                <label for="email" class="block text-sm mb-2 dark:text-white">Email</label>
-                <div class="relative">
-                  <input type="text" id="email" wire:model="email"
-                    class="py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600"
-                    aria-describedby="email-error">
-
-                  @error('email')
-            <div class="absolute inset-y-0 end-0 flex items-center pe-3">
-            <svg class="h-5 w-5 text-red-500" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"
-              aria-hidden="true">
-              <path
-              d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
-            </svg>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">Create your account</h2>
             </div>
-          @enderror
-                </div>
-
-                @error('email')
-          <p class="text-xs text-red-600 mt-2" id="email-error">{{ $message }}</p>
-        @enderror
-              </div>
-
-<!-- Address -->
-<div class="relative mt-4">
-    <label for="address" class="block text-sm mb-2 dark:text-white">Address</label>
-    <div class="relative">
-        <input type="text" id="address" wire:model="address" rows="3"
-            class="py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600"></textarea>
-
-        <!-- Error Icon -->
-        @error('address')
-            <div class="absolute inset-y-0 right-3 flex items-center">
-                <svg class="h-5 w-5 text-red-500" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"
-                    aria-hidden="true">
-                    <path
-                        d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
-                </svg>
-            </div>
-        @enderror
-    </div>
-
-    <!-- Error Message -->
-    @error('address')
-        <p class="text-xs text-red-600 mt-2" id="address-error">{{ $message }}</p>
-    @enderror
-</div>
-
-
-<!-- Mobile -->
-<div class="relative mt-4">
-    <label for="mobile" class="block text-sm mb-2 dark:text-white">Mobile</label>
-    <div class="relative">
-        <input type="tel" id="mobile" wire:model="mobile"
-            class="py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600"
-            aria-describedby="mobile-error">
-
-        @error('mobile')
-        <div class="absolute inset-y-0 end-0 flex items-center pe-3">
-            <svg class="h-5 w-5 text-red-500" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"
-                aria-hidden="true">
-                <path
-                    d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
-            </svg>
         </div>
-        @enderror
+
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-xl">
+            <div class="bg-white py-8 px-4 shadow-xl sm:rounded-lg sm:px-10 border border-gray-200">
+                <form wire:submit.prevent="register" class="space-y-6">
+                    <!-- Account Type Selector -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div wire:click="$set('user_type', 'personal')"
+                            class="relative cursor-pointer rounded-lg border p-4 flex flex-col items-center shadow-sm {{ $user_type === 'personal' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500' : 'border-gray-300 bg-white' }}">
+                            <span
+                                class="flex h-10 w-10 items-center justify-center rounded-full {{ $user_type === 'personal' ? 'bg-blue-600' : 'bg-gray-200' }}">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="h-6 w-6 {{ $user_type === 'personal' ? 'text-white' : 'text-gray-500' }}"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </span>
+                            <span
+                                class="mt-2 font-medium {{ $user_type === 'personal' ? 'text-blue-900' : 'text-gray-900' }}">Personal</span>
+                            @if($user_type === 'personal')
+                                <span class="absolute top-2 right-2 h-5 w-5 text-blue-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                            @endif
+                        </div>
+                        <div wire:click="$set('user_type', 'business')"
+                            class="relative cursor-pointer rounded-lg border p-4 flex flex-col items-center shadow-sm {{ $user_type === 'business' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500' : 'border-gray-300 bg-white' }}">
+                            <span
+                                class="flex h-10 w-10 items-center justify-center rounded-full {{ $user_type === 'business' ? 'bg-blue-600' : 'bg-gray-200' }}">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="h-6 w-6 {{ $user_type === 'business' ? 'text-white' : 'text-gray-500' }}"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </span>
+                            <span
+                                class="mt-2 font-medium {{ $user_type === 'business' ? 'text-blue-900' : 'text-gray-900' }}">Business</span>
+                            @if($user_type === 'business')
+                                <span class="absolute top-2 right-2 h-5 w-5 text-blue-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <div class="space-y-5">
+                        <div class="grid grid-cols-1 gap-y-5 gap-x-4 sm:grid-cols-2">
+                            <div>
+                                <label for="first_name" class="block text-sm font-medium text-gray-700">First
+                                    name</label>
+                                <div class="mt-1">
+                                    <input wire:model="first_name" id="first_name" type="text"
+                                        class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        placeholder="John">
+                                </div>
+                                @error('first_name')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="last_name" class="block text-sm font-medium text-gray-700">Last name</label>
+                                <div class="mt-1">
+                                    <input wire:model="last_name" id="last_name" type="text"
+                                        class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        placeholder="Doe">
+                                </div>
+                                @error('last_name')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                            <div class="mt-1">
+                                <input wire:model="email" id="email" type="email"
+                                    class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    placeholder="your.email@example.com">
+                            </div>
+                            @error('email')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
+                            <div class="mt-1">
+                                <input wire:model="address" id="address" type="text"
+                                    class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    placeholder="123 Main Street, City">
+                            </div>
+                            @error('address')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="mobile" class="block text-sm font-medium text-gray-700">Mobile number</label>
+                            <div class="mt-1">
+                                <input wire:model="mobile" id="mobile" type="tel"
+                                    class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    placeholder="+1 (234) 567-8900">
+                            </div>
+                            @error('mobile')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <!-- Conditional Fields -->
+                    @if($user_type === 'personal')
+                        <div class="space-y-4">
+                            <div class="relative">
+                                <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                                    <div class="w-full border-t border-gray-300"></div>
+                                </div>
+                                <div class="relative flex justify-center">
+                                    <span class="bg-white px-3 text-sm font-semibold text-gray-900">Personal
+                                        Information</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="nic" class="block text-sm font-medium text-gray-700">NIC Number</label>
+                                <div class="mt-1">
+                                    <input wire:model="nic" id="nic" type="text"
+                                        class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        placeholder="1234-5678-9012">
+                                </div>
+                                @error('nic')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    @else
+                        <div class="space-y-4">
+                            <div class="relative">
+                                <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                                    <div class="w-full border-t border-gray-300"></div>
+                                </div>
+                                <div class="relative flex justify-center">
+                                    <span class="bg-white px-3 text-sm font-semibold text-gray-900">Business
+                                        Information</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="business_id" class="block text-sm font-medium text-gray-700">Business ID</label>
+                                <div class="mt-1">
+                                    <input wire:model="business_id" id="business_id" type="text"
+                                        class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        placeholder="BUS-12345678">
+                                </div>
+                                @error('business_id')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="certificate" class="block text-sm font-medium text-gray-700">Business
+                                    Certificate</label>
+                                <div class="mt-1">
+                                    <div class="flex items-center justify-center w-full">
+                                        <label for="certificate"
+                                            class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <svg class="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                                    </path>
+                                                </svg>
+                                                <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to
+                                                        upload</span> or drag and drop</p>
+                                                <p class="text-xs text-gray-500">PDF, PNG, JPG or GIF (MAX. 10MB)</p>
+                                            </div>
+                                            <input wire:model="certificate" id="certificate" type="file" class="hidden" />
+                                        </label>
+                                    </div>
+                                    <div wire:loading wire:target="certificate" class="mt-2 text-sm text-blue-600">
+                                        <div class="flex items-center">
+                                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" fill="none"
+                                                viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                    stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                </path>
+                                            </svg>
+                                            Uploading...
+                                        </div>
+                                    </div>
+                                </div>
+                                @error('certificate')
+                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Password Section -->
+                    <div class="space-y-5">
+                        <div class="relative">
+                            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                                <div class="w-full border-t border-gray-300"></div>
+                            </div>
+                            <div class="relative flex justify-center">
+                                <span class="bg-white px-3 text-sm font-semibold text-gray-900">Security</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                            <div class="mt-1">
+                                <input wire:model="password" id="password" type="password"
+                                    class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    placeholder="••••••••">
+                            </div>
+                            @error('password')
+                                <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Confirm
+                                password</label>
+                            <div class="mt-1">
+                                <input wire:model="password_confirmation" id="password_confirmation" type="password"
+                                    class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                    placeholder="••••••••">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm">
+                            <a href="{{ route('login') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                                Already have an account? Sign in
+                            </a>
+                        </div>
+                        <button type="submit"
+                            class="inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                            Register
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-
-    @error('mobile')
-    <p class="text-xs text-red-600 mt-2" id="mobile-error">{{ $message }}</p>
-    @enderror
 </div>
-
-<div class="relative mt-4">
-    <!-- User Type -->
-    <label for="user_type" class="block text-sm mb-2 dark:text-white">User Type</label>
-    <select id="user_type" wire:model.live="user_type"
-        class="py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600">
-        <option value="">Select User Type</option>
-        <option value="personal">Personal Customer</option>
-        <option value="business">Business Customer</option>
-    </select>
-
-    @error('user_type')
-    <p class="text-xs text-red-600 mt-2">{{ $message }}</p>
-    @enderror
-</div>
-
-<!-- NIC (Visible only for Personal Customer) -->
-@if($user_type === 'personal')
-<div class="relative mt-4">
-    <label for="nic" class="block text-sm mb-2 dark:text-white">NIC</label>
-    <input type="text" id="nic" wire:model="nic"
-        class="py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600">
-
-    @error('nic')
-    <p class="text-xs text-red-600 mt-2">{{ $message }}</p>
-    @enderror
-</div>
-@endif
-
-<!-- Business ID (Visible only for Business Customer) -->
-@if($user_type === 'business')
-<div class="relative mt-4">
-    <label for="business_id" class="block text-sm mb-2 dark:text-white">Business ID</label>
-    <input type="text" id="business_id" wire:model="business_id"
-        class="py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600">
-
-    @error('business_id')
-    <p class="text-xs text-red-600 mt-2">{{ $message }}</p>
-    @enderror
-</div>
-@endif
-
-<!-- Certificate Document (Visible only for Business Customer) -->
-@if($user_type === 'business')
-<div class="relative mt-4">
-    <label for="certificate" class="block text-sm mb-2 dark:text-white">Certificate Document</label>
-    <input type="file" id="certificate" wire:model="certificate" accept=".pdf,.jpg,.jpeg,.png"
-        class="py-3 px-4 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600">
-
-    @error('certificate')
-    <p class="text-xs text-red-600 mt-2">{{ $message }}</p>
-    @enderror
-</div>
-@endif
-
-
-<!-- Password -->
-<div class="relative mt-4">
-    <label for="password" class="block text-sm mb-2 dark:text-white">Password</label>
-    <div class="relative">
-        <input type="{{ $showPassword ? 'text' : 'password' }}" id="password" wire:model="password"
-            class="py-3 px-4 pr-10 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600">
-        
-        <!-- Toggle Password Visibility -->
-        <button type="button" wire:click="togglePassword" class="absolute inset-y-0 right-3 flex items-center">
-            @if($showPassword)
-                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 4.5c-7.5 0-11 7.5-11 7.5s3.5 7.5 11 7.5 11-7.5 11-7.5-3.5-7.5-11-7.5zm0 13.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
-                </svg>
-            @else
-                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15.5 12a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0zm-11.7.5a10 10 0 0 1 18.4 0m-2.9 3.6a7 7 0 0 1-12.6 0"/>
-                </svg>
-            @endif
-        </button>
-    </div>
-    @error('password')
-        <p class="text-xs text-red-600 mt-2">{{ $message }}</p>
-    @enderror
-</div>
-
-<!-- Confirm Password -->
-<div class="relative mt-4">
-    <label for="confirm_password" class="block text-sm mb-2 dark:text-white">Confirm Password</label>
-    <div class="relative">
-        <input type="{{ $showConfirmPassword ? 'text' : 'password' }}" id="confirm_password" wire:model="confirm_password"
-            class="py-3 px-4 pr-10 block w-full border border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600">
-        
-        <!-- Toggle Confirm Password Visibility -->
-        <button type="button" wire:click="toggleConfirmPassword" class="absolute inset-y-0 right-3 flex items-center">
-            @if($showConfirmPassword)
-                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 4.5c-7.5 0-11 7.5-11 7.5s3.5 7.5 11 7.5 11-7.5 11-7.5-3.5-7.5-11-7.5zm0 13.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
-                </svg>
-            @else
-                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15.5 12a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0zm-11.7.5a10 10 0 0 1 18.4 0m-2.9 3.6a7 7 0 0 1-12.6 0"/>
-                </svg>
-            @endif
-        </button>
-    </div>
-    @error('confirm_password')
-        <p class="text-xs text-red-600 mt-2">{{ $message }}</p>
-    @enderror
-
-    @if($password !== $confirm_password && $confirm_password !== null)
-        <p class="text-xs text-red-600 mt-2">Passwords do not match</p>
-    @endif
-</div>
-
-      <!-- Submit Button -->
-      <div class="relative mt-11">
-       <button type="submit"
-        class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600">Sign
-        up</button>
-
-       </div>
-      
-  </div>
-  </form>
-</div>
-</div>
-</div>
-</div>
-
-
-
-<!-- JavaScript to toggle fields based on User Type -->
-<!-- <script>
-  function toggleUserFields(selectElement) {
-    const nicField = document.getElementById('nic_field');
-    const businessIdField = document.getElementById('business_id_field');
-    const certificateField = document.getElementById('certificate_field');
-
-    const userType = selectElement.value;
-
-    nicField.classList.toggle('hidden', userType !== 'personal');
-    businessIdField.classList.toggle('hidden', userType !== 'business');
-    certificateField.classList.toggle('hidden', userType !== 'business');
-  }
-</script> -->

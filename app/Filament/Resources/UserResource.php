@@ -17,6 +17,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -24,38 +25,60 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationIcon = 'heroicon-o-user';
 
-    protected static ?int $navigationSort = 1;
-
-    protected static ?string $recordTitleAttribute = 'name';
-    public static function getGloballySearchableAttributes(): array
-{
-    return ['name', 'email'];
-}
+    protected static ?string $navigationGroup = 'User Management';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                ->required(),
-
-                Forms\Components\TextInput::make('email')
-                ->label('Email Address')
-                ->email()
-                ->maxLength(225)
-                ->unique(ignoreRecord: true)
-                ->required(),
-
-                Forms\Components\DateTimePicker::make('email_verified_at')
-                ->label('Email Verified At')
-                ->default(now()),
-
-                Forms\Components\TextInput::make('password')
-                ->password()
-                ->dehydrated(fn($state)=>filled($state))
-                ->required(fn(Page $livewire) => $livewire instanceof CreateRecord)
+                Forms\Components\Card::make()
+                    ->schema([
+                        Forms\Components\TextInput::make('first_name')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('last_name')
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('email')
+                            ->email()
+                            ->required()
+                            ->maxLength(255)
+                            ->unique(User::class, 'email', fn ($record) => $record),
+                        Forms\Components\TextInput::make('password')
+                            ->password()
+                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
+                            ->dehydrated(fn ($state) => filled($state))
+                            ->required(fn (string $context): bool => $context === 'create'),
+                        Forms\Components\Select::make('user_type')
+                            ->options([
+                                'admin' => 'Admin',
+                                'personal' => 'Personal Customer',
+                                'business' => 'Business Customer',
+                            ])
+                            ->required()
+                            ->reactive(),
+                        Forms\Components\Select::make('roles')
+                            ->multiple()
+                            ->relationship('roles', 'name')
+                            ->preload(),
+                        Forms\Components\TextInput::make('address')
+                            ->visible(fn (callable $get) => $get('user_type') !== 'admin')
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('mobile')
+                            ->visible(fn (callable $get) => $get('user_type') !== 'admin')
+                            ->tel()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('nic')
+                            ->visible(fn (callable $get) => $get('user_type') === 'personal')
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('business_id')
+                            ->visible(fn (callable $get) => $get('user_type') === 'business')
+                            ->maxLength(255),
+                        Forms\Components\FileUpload::make('certificate')
+                            ->visible(fn (callable $get) => $get('user_type') === 'business')
+                            ->directory('certificates'),
+                    ])
             ]);
     }
 
@@ -63,44 +86,60 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-                ->searchable(),
-
+                Tables\Columns\TextColumn::make('first_name')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('last_name')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('email')
-                ->searchable(),
-
-                Tables\Columns\TextColumn::make('email_verified_at')
-                ->dateTime()
-                ->sortable(),
-
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('user_type')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'admin' => 'success',
+                        'personal' => 'primary',
+                        'business' => 'warning',
+                        default => 'gray',
+                    })
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->badge()
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
-                ->dateTime()
-                ->sortable()
-
-
+                    ->dateTime()
+                    ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('user_type')
+                    ->options([
+                        'admin' => 'Admin',
+                        'personal' => 'Personal Customer',
+                        'business' => 'Business Customer',
+                    ]),
+                Tables\Filters\SelectFilter::make('roles')
+                    ->relationship('roles', 'name')
+                    ->multiple(),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()])
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
-
+    
     public static function getRelations(): array
     {
         return [
-            OrdersRelationManager::class,
+            //
         ];
     }
-
+    
     public static function getPages(): array
     {
         return [
@@ -108,5 +147,5 @@ class UserResource extends Resource
             'create' => Pages\CreateUser::route('/create'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
-    }
+    }    
 }

@@ -1,5 +1,6 @@
 <?php
-
+App\Providers\FilamentBindingServiceProvider::class;
+App\Providers\FilamentServiceProvider::class;
 return [
 
     /*
@@ -13,7 +14,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'GasByGas'),
 
     /*
     |--------------------------------------------------------------------------

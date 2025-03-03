@@ -1,5 +1,9 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+
+// Original Livewire pages
 use App\Livewire\Auth\ForgotPasswordPage;
 use App\Livewire\Auth\LoginPage;
 use App\Livewire\Auth\RegisterPage;
@@ -12,20 +16,51 @@ use App\Livewire\MyOrdersPage;
 use App\Livewire\OrderGasPage;
 use App\Livewire\ProductsPage;
 use App\Livewire\SuccessPage;
-use Illuminate\Support\Facades\Route;
 
-Route::get("/", HomePage::class );
-Route::get("/ordergas", OrderGasPage::class );
-Route::get("/categories", CategoriesPage::class );
-Route::get("/products", ProductsPage::class );
+// Role-based auth components
+use App\Livewire\Customer\Personal\Dashboard as PersonalDashboard;
+use App\Livewire\Customer\Business\Dashboard as BusinessDashboard;
+use App\Livewire\Customer\Profile as CustomerProfile;
 
-Route::get("/myorders", MyOrdersPage::class );
-Route::get("/myorders/{order}", MyOrderDetailPage::class );
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 
-Route::get("/login", LoginPage::class );
-Route::get("/signup", RegisterPage::class );
-Route::get("/forgot", ForgotPasswordPage::class );
-Route::get("/reset", ResetPasswordPage::class );
+// Original public routes
+Route::get("/", HomePage::class)->name('home');
+Route::get("/ordergas", OrderGasPage::class);
+Route::get("/categories", CategoriesPage::class);
+Route::get("/products", ProductsPage::class);
+Route::get("/success", SuccessPage::class);
+Route::get("/cancel", CancelPage::class);
 
-Route::get("/success", SuccessPage::class );
-Route::get("/cancel", CancelPage::class );
+// Guest routes for authentication
+Route::middleware('guest')->group(function () {
+    // Original auth routes
+    Route::get("/login", LoginPage::class)->name('login');
+    Route::get("/signup", RegisterPage::class)->name('register');
+    Route::get("/forgot", ForgotPasswordPage::class);
+    Route::get("/reset", ResetPasswordPage::class)->name('password.request');
+});
+
+// Auth routes that require authentication
+Route::middleware('auth')->group(function () {
+    // Original authenticated routes
+    Route::get("/myorders", MyOrdersPage::class);
+    Route::get("/myorders/{order}", MyOrderDetailPage::class);
+    
+    // Customer dashboards without middleware for now
+    Route::get('/personal/dashboard', PersonalDashboard::class)->name('personal.dashboard');
+    Route::get('/business/dashboard', BusinessDashboard::class)->name('business.dashboard');
+    Route::get('/customer/profile', CustomerProfile::class)->name('customer.profile');
+    
+    // Logout route
+    Route::post('/logout', function () {
+        Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        return redirect('/');
+    })->name('logout');
+});
