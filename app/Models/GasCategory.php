@@ -15,4 +15,9 @@ class GasCategory extends Model
     {
         return $this->hasMany(Products::class);
     }
+
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
 }

@@ -21,7 +21,13 @@ class Products extends Model
 
     public function orderItem(){
         return $this->hasMany(OrderItem::class);
-}
+    }
 
+    public function outletProduct(){
+        return $this->hasMany(OutletProduct::class);
+    }
+    public function schedule(){
+        return $this->hasMany(Schedule::class);
+    }
 
 }
