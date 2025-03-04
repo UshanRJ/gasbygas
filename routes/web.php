@@ -16,6 +16,7 @@ use App\Livewire\MyOrdersPage;
 use App\Livewire\OrderGasPage;
 use App\Livewire\ProductsPage;
 use App\Livewire\SuccessPage;
+use App\Http\Controllers\OrderController;
 
 // Role-based auth components
 use App\Livewire\Customer\Personal\Dashboard as PersonalDashboard;
@@ -48,14 +49,13 @@ Route::middleware('guest')->group(function () {
 
 // Auth routes that require authentication
 Route::middleware('auth')->group(function () {
-    // Original authenticated routes
-    Route::get("/myorders", MyOrdersPage::class);
-    Route::get("/myorders/{order}", MyOrderDetailPage::class);
 
     // Order routes
 Route::middleware(['auth'])->group(function () {
-    Route::get('/orders', [App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [App\Http\Controllers\OrderController::class, 'show'])->name('orders.show');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    // Add this to your web.php routes file
+Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 });
 
     

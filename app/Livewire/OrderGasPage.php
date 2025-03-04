@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\GasCategory;
 use App\Models\Outlets;
 use App\Models\Products;
+use App\Models\Order;
 use Illuminate\Auth\Authenticatable;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -34,6 +35,9 @@ class OrderGasPage extends Component
     
     // Optional: For special instructions
     public $specialInstructions = '';
+    
+    // Flag to indicate if products are available
+    public $noProductsAvailable = false;
 
     public function mount()
     {
@@ -42,14 +46,34 @@ class OrderGasPage extends Component
             return redirect()->route('login', ['redirect' => 'ordergas']);
         }
         
+        // Get current user
+        $user = Auth::user();
+        
+        // Check if user has active orders
+        $activeOrders = Order::where('user_id', $user->id)
+            ->whereIn('status', ['new', 'processing', 'rescheduled'])
+            ->count();
+            
+        // If user has active orders, redirect with error message
+        if ($activeOrders > 0) {
+            session()->flash('error', 'You already have an active order. You cannot place a new order until your current order is completed or cancelled.');
+            return redirect()->route('orders.index');
+        }
+        
         // Get all active gas categories
         $allCategories = GasCategory::where('is_active', 1)->get();
         
         // Filter categories based on user type
-        $user = Auth::user();
         $this->gasCategories = $this->filterCategoriesByUserType($allCategories, $user);
         
-        $this->products = Products::where('is_active', 1)->get(['id', 'name', 'slug', 'price', 'image', 'category_id']);
+        // Fetch gas outlets from the database
+        $this->gasOutlets = Outlets::all();
+        
+        // Get all active, in stock, and on sale products
+        $this->products = Products::where('is_active', 1)
+            ->where('is_stock', 1)
+            ->where('on_sale', 1)
+            ->get(['id', 'name', 'slug', 'price', 'image', 'category_id']);
         
         // Set default category if available
         if ($this->gasCategories->isNotEmpty()) {
@@ -63,14 +87,14 @@ class OrderGasPage extends Component
             $this->filteredProducts = $this->products;
         }
 
-        // Fetch gas outlets from the database
-        $this->gasOutlets = Outlets::all();
+        // Check if products are available after filtering
+        $this->checkProductAvailability();
         
         // Default shipping cost
         $this->shippingCost = 0; // Example fixed shipping cost
         
-        // Calculate tax rate (12%)
-        $this->taxes = $this->subtotal * 1;
+        // Calculate tax rate (0% as per the original code)
+        $this->taxes = $this->subtotal * 0;
         
         // Calculate initial grand total
         $this->calculateGrandTotal();
@@ -106,15 +130,88 @@ class OrderGasPage extends Component
         return $categories;
     }
 
-    // Helper function to filter products
+    // Helper function to filter products and check stock availability
     private function filterProductsByCategory($categoryId)
     {
-        $this->filteredProducts = $this->products->filter(function ($product) use ($categoryId) {
+        // Step 1: Filter by category
+        $categoryFilteredProducts = $this->products->filter(function ($product) use ($categoryId) {
             return $product->category_id == $categoryId;
         });
 
+        // Step 2: Prepare to check stock in selected outlet
+        if ($this->selectedOutletId) {
+            $outlet = Outlets::find($this->selectedOutletId);
+            
+            // If outlet is selected, further filter by stock availability
+            if ($outlet) {
+                $this->filteredProducts = $categoryFilteredProducts->filter(function ($product) use ($outlet) {
+                    // Check if product is in stock at the selected outlet
+                    // This would need a relationship or method to check stock levels
+                    // The implementation will depend on your database structure
+                    return $this->isProductInStockAtOutlet($product->id, $outlet->id);
+                });
+            } else {
+                $this->filteredProducts = $categoryFilteredProducts;
+            }
+        } else {
+            $this->filteredProducts = $categoryFilteredProducts;
+        }
+
         \Log::debug('Filtered products count: ' . $this->filteredProducts->count());
-        \Log::debug('First few products: ' . json_encode($this->filteredProducts->take(2)->toArray()));
+        
+        // Check if there are any products available after filtering
+        $this->checkProductAvailability();
+    }
+    
+    /**
+     * Check if a product is in stock at a specific outlet
+     *
+     * @param int $productId
+     * @param int $outletId
+     * @return bool
+     */
+    private function isProductInStockAtOutlet($productId, $outletId)
+    {
+        // This implementation depends on your database structure
+        // You might have a stock table or a relationship between products and outlets
+        // Here's a basic example assuming you have a stock table:
+        
+        // Example: 
+        // return \App\Models\Stock::where('product_id', $productId)
+        //     ->where('outlet_id', $outletId)
+        //     ->where('quantity', '>', 0)
+        //     ->exists();
+        
+        // If you don't have a dedicated stock table, you might need to check another way
+        // For now, let's assume all products are in stock at all outlets
+        return true;
+    }
+
+    /**
+     * Check if any products are available after filtering
+     */
+    private function checkProductAvailability()
+    {
+        $this->noProductsAvailable = $this->filteredProducts->isEmpty();
+        \Log::debug('No products available flag: ' . ($this->noProductsAvailable ? 'true' : 'false'));
+    }
+
+    public function updatedSelectedOutletId($outletId)
+    {
+        \Log::debug('Outlet ID selected: ' . $outletId);
+        
+        // Reset product selection when outlet changes
+        $this->selectedProductId = null;
+        $this->selectedProductImage = null;
+        $this->selectedProductName = null;
+        $this->subtotal = 0;
+        
+        // Re-filter products based on category and check stock at selected outlet
+        if ($this->selectedCategoryId) {
+            $this->filterProductsByCategory($this->selectedCategoryId);
+        }
+        
+        $this->calculateGrandTotal();
     }
 
     public function updatedSelectedCategoryId($categoryId)
@@ -172,7 +269,7 @@ class OrderGasPage extends Component
             $this->selectedProductName = null;
         }
 
-        // Calculate tax (12% of subtotal)
+        // Calculate tax (0% of subtotal as per original code)
         $this->taxes = $this->subtotal * 0;
         
         $this->calculateGrandTotal();
@@ -182,8 +279,6 @@ class OrderGasPage extends Component
     {
         $this->grandTotal = $this->subtotal + $this->taxes + $this->shippingCost;
     }
-    
-    // Add place order method
 
     public function render()
     {
@@ -195,6 +290,20 @@ class OrderGasPage extends Component
         try {
             // Log start of method
             \Log::info('Starting placeOrder method');
+            
+            // Get current user
+            $user = Auth::user();
+            
+            // Check again if user has active orders (in case user had multiple tabs open)
+            $activeOrders = Order::where('user_id', $user->id)
+                ->whereIn('status', ['new', 'processing', 'rescheduled'])
+                ->count();
+                
+            // If user has active orders, show error and return
+            if ($activeOrders > 0) {
+                session()->flash('error', 'You already have an active order. You cannot place a new order until your current order is completed or cancelled.');
+                return redirect()->route('orders.index');
+            }
             
             // Validate required fields
             $this->validate([
@@ -211,8 +320,6 @@ class OrderGasPage extends Component
             $orderToken = $this->generateUniqueId();
             \Log::info('Generated order token: ' . $orderToken);
             
-            // Get the current user
-            $user = Auth::user();
             \Log::info('User ID: ' . $user->id);
             
             // Set default values
@@ -289,13 +396,13 @@ class OrderGasPage extends Component
         }
     }
 
-/**
- * Generate unique identifier for order token
- *
- * @return string
- */
-protected function generateUniqueId()
-{
-    return \Illuminate\Support\Str::uuid()->toString();
-}
+    /**
+     * Generate unique identifier for order token
+     *
+     * @return string
+     */
+    protected function generateUniqueId()
+    {
+        return \Illuminate\Support\Str::uuid()->toString();
+    }
 }

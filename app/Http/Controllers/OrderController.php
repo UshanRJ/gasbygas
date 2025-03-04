@@ -42,4 +42,30 @@ class OrderController extends Controller
         
         return view('orders.show', compact('order'));
     }
+
+    /**
+     * Cancel the specified order.
+     *
+     * @param  \App\Models\Order  $order
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function cancel(Order $order)
+    {
+        // Check if order belongs to current user
+        if ($order->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+        
+        // Check if order can be cancelled
+        if ($order->status === 'completed' || $order->status === 'cancelled') {
+            return back()->with('error', 'This order cannot be cancelled.');
+        }
+        
+        // Update order status
+        $order->update([
+            'status' => 'cancelled'
+        ]);
+        
+        return redirect()->route('orders.show', $order)->with('success', 'Your order has been cancelled successfully.');
+    }
 }
