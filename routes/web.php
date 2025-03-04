@@ -30,7 +30,8 @@ use App\Livewire\Customer\Profile as CustomerProfile;
 
 // Original public routes
 Route::get("/", HomePage::class)->name('home');
-Route::get("/ordergas", OrderGasPage::class);
+// In your routes/web.php file
+Route::get("/ordergas", OrderGasPage::class)->middleware('auth');
 Route::get("/categories", CategoriesPage::class);
 Route::get("/products", ProductsPage::class);
 Route::get("/success", SuccessPage::class);
@@ -50,6 +51,13 @@ Route::middleware('auth')->group(function () {
     // Original authenticated routes
     Route::get("/myorders", MyOrdersPage::class);
     Route::get("/myorders/{order}", MyOrderDetailPage::class);
+
+    // Order routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/orders', [App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [App\Http\Controllers\OrderController::class, 'show'])->name('orders.show');
+});
+
     
     // Customer dashboards without middleware for now
     Route::get('/personal/dashboard', PersonalDashboard::class)->name('personal.dashboard');

@@ -65,15 +65,20 @@ class OrderResource extends Resource
                     Section::make('Order Information')->schema([
                         Select::make('user_id')
                             ->Label('Customer')
-                            ->relationship('user', 'name')
-                            ->searchable()
+                            ->relationship('user', 'first_name')
+                            ->getOptionLabelFromRecordUsing(fn(User $record) => "{$record->first_name} {$record->last_name}")
+                            ->searchable(['first_name', 'last_name', 'email'])
                             ->preload()
                             ->required()
                             ->options(function () {
                                 // Fetch users who do not have orders with status 'new', 'processing', or 'rescheduled'
                                 return User::whereDoesntHave('order', function ($query) {
                                     $query->whereIn('status', ['new', 'processing', 'rescheduled']);
-                                })->pluck('name', 'id');
+                                })
+                                    ->get()
+                                    ->mapWithKeys(function ($user) {
+                                    return [$user->id => "{$user->first_name} {$user->last_name}"];
+                                });
                             }),
                         Select::make('outlet_id')
                             ->label('Outlet')
@@ -278,9 +283,12 @@ class OrderResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('user.name')
+                TextColumn::make('user.first_name')
                     ->label('Customer Name')
-                    ->searchable(),
+                    ->formatStateUsing(function ($record) {
+                        return "{$record->user->first_name} {$record->user->last_name}";
+                    })
+                    ->searchable(['user.first_name', 'user.last_name']),
                 TextColumn::make('orderItems.product.name')
                     ->label('Ordered Item')
                     ->searchable(),

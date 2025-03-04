@@ -77,9 +77,15 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Ensure we have a fallback for the name attribute.
      */
+
+    /**
+     * Get the user's full name.
+     *
+     * @return string
+     */
     public function getNameAttribute(): string
     {
-        return $this->first_name ?: 'Admin';
+        return "{$this->first_name} {$this->last_name}";
     }
 
     // Relationship with roles
@@ -94,7 +100,7 @@ class User extends Authenticatable implements FilamentUser
         if (is_string($role)) {
             return $this->roles->contains('slug', $role);
         }
-        
+
         return $role->intersect($this->roles)->count() > 0;
     }
 
@@ -104,13 +110,13 @@ class User extends Authenticatable implements FilamentUser
         if (is_string($roles)) {
             return $this->hasRole($roles);
         }
-        
+
         foreach ($roles as $role) {
             if ($this->hasRole($role)) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -120,20 +126,20 @@ class User extends Authenticatable implements FilamentUser
         if (is_string($roles)) {
             return $this->hasRole($roles);
         }
-        
+
         foreach ($roles as $role) {
             if (!$this->hasRole($role)) {
                 return false;
             }
         }
-        
+
         return true;
     }
 
     // Check if user has permission through their roles
     public function hasPermission($permission)
     {
-        return $this->roles->flatMap(function($role) {
+        return $this->roles->flatMap(function ($role) {
             return $role->permissions;
         })->contains('slug', $permission);
     }
@@ -169,7 +175,8 @@ class User extends Authenticatable implements FilamentUser
         return $this->isAdmin();
     }
 
-    public function order(){
+    public function order()
+    {
         return $this->hasMany(Order::class);
     }
 }

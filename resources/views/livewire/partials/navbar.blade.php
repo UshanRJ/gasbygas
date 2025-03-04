@@ -68,7 +68,7 @@
 
               <a wire:navigate
                 class="font-medium {{request()->is('myorders') ? 'text-blue-600' : 'text-gray-500'}} py-3 md:py-6 dark:text-gray-400 dark:hover:text-gray-500 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                href="/myorders">
+                href="/orders">
                 My Orders
               </a>
 
