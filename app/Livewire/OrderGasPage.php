@@ -6,6 +6,7 @@ use App\Models\GasCategory;
 use App\Models\Outlets;
 use App\Models\Products;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Auth\Authenticatable;
 use Livewire\Attributes\Title;
 use Livewire\Component;
