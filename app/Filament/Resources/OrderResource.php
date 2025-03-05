@@ -40,6 +40,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Number;
 use PhpParser\Node\Stmt\Label;
+use App\Notifications\OrderStatusUpdated;
 
 class OrderResource extends Resource
 {
@@ -300,6 +301,11 @@ class OrderResource extends Resource
                     ->searchable()
                     ->money('LKR')
                     ->sortable(),
+                    TextColumn::make('orderItems.scheduled_date')
+                    ->label(label: 'Scheduled Date')
+                    ->date()
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('payment_method')
                     ->label('Payment Method')
                     ->toggleable(isToggledHiddenByDefault: true)
@@ -366,7 +372,21 @@ class OrderResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->default('new') // Optional: Sets a default value
-                    ->afterStateUpdated(fn($state, $record) => $record->save()), // Auto-save after change
+                    ->afterStateUpdated(function ($state, $record) {
+                        // Save the record
+                        $record->save();
+                        
+                        // If status changed to processing, send notification
+                        if ($state === 'processing') {
+                            // Get the user who placed the order
+                            $user = $record->user;
+                            
+                            // Send notification to the user
+                            $user->notify(new OrderStatusUpdated($record, $state));
+                        }
+                    }),
+                    
+                    // Auto-save after change
 
                 TextColumn::make('notes')
                     ->searchable()

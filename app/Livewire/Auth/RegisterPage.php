@@ -4,6 +4,7 @@ namespace App\Livewire\Auth;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Notifications\CustomerRegistered;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
@@ -79,6 +80,9 @@ class RegisterPage extends Component
         if ($role) {
             $user->roles()->attach($role->id);
         }
+
+        // Send welcome notification
+        $user->notify(new CustomerRegistered($user));
 
         event(new Registered($user));
 

@@ -19,5 +19,9 @@ class OrderItem extends Model
         return $this->belongsTo(Order::class);
     }
 
+    protected $casts = [
+        'scheduled_date' => 'date',
+    ];
+
 
 }
