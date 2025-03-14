@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Filament\Facades\Filament;
+use Filament\Panel;
 
 class FilamentServiceProvider extends ServiceProvider
 {
@@ -20,6 +21,11 @@ class FilamentServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Configure panel to hide documentation link
+        Panel::configureUsing(function (Panel $panel): void {
+            $panel->showDocumentationLink(false);
+        });
+
         Filament::serving(function () {
             // Tell Filament to use first_name as the user's name
             if (auth()->check()) {

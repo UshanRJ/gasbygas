@@ -377,7 +377,7 @@ class OrderResource extends Resource
                         $record->save();
                         
                         // If status changed to processing, send notification
-                        if ($state === 'processing') {
+                        if ($state === 'processing' || $state === 'rescheduled') {
                             // Get the user who placed the order
                             $user = $record->user;
                             

@@ -123,13 +123,15 @@
                         <div>
                             <label for="mobile" class="block text-sm font-medium text-gray-700">Mobile number</label>
                             <div class="mt-1">
-                                <input wire:model="mobile" id="mobile" type="tel"
+                                <input wire:model="mobile" id="mobile" type="tel" maxlength="10"
                                     class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    placeholder="+1 (234) 567-8900">
+                                    placeholder="0771234567">
+                                <p class="mt-1 text-xs text-gray-500">Format: 0771234567 (10 digits starting with 0)</p>
                             </div>
                             @error('mobile')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
+                            <div id="mobile-validation-message" class="mt-2 text-sm text-red-600 hidden"></div>
                         </div>
                     </div>
 
@@ -149,13 +151,15 @@
                             <div>
                                 <label for="nic" class="block text-sm font-medium text-gray-700">NIC Number</label>
                                 <div class="mt-1">
-                                    <input wire:model="nic" id="nic" type="text"
+                                    <input wire:model="nic" id="nic" type="text" maxlength="12"
                                         class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        placeholder="1234-5678-9012">
+                                        placeholder="123456789V or 000123456789">
+                                    <p class="mt-1 text-xs text-gray-500">Format: 123456789V (9 digits + 'V') or 000123456789 (12 digits)</p>
                                 </div>
                                 @error('nic')
                                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
+                                <div id="nic-validation-message" class="mt-2 text-sm text-red-600 hidden"></div>
                             </div>
                         </div>
                     @else
@@ -273,4 +277,82 @@
             </div>
         </div>
     </div>
+
+    <!-- Client-side validation script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // NIC validation for format: 359506417V or 011523445678
+            const nicInput = document.getElementById('nic');
+            if (nicInput) {
+                // Use blur instead of input to validate only when user leaves the field
+                nicInput.addEventListener('blur', function() {
+                    const value = this.value.trim();
+                    const oldNicPattern = /^\d{9}[Vv]$/;
+                    const newNicPattern = /^\d{12}$/;
+                    const nicValidationMsg = document.getElementById('nic-validation-message');
+                    
+                    if (value === '') {
+                        // Empty input - hide validation message
+                        nicValidationMsg.classList.add('hidden');
+                        this.classList.remove('border-red-500', 'border-green-500');
+                    } else if (oldNicPattern.test(value) || newNicPattern.test(value)) {
+                        // Valid format
+                        nicValidationMsg.classList.add('hidden');
+                        this.classList.remove('border-red-500');
+                        this.classList.add('border-green-500');
+                    } else {
+                        // Invalid format
+                        nicValidationMsg.textContent = 'NIC must be in format 123456789V (9 digits + V) or 000123456789 (12 digits)';
+                        nicValidationMsg.classList.remove('hidden');
+                        this.classList.remove('border-green-500');
+                        this.classList.add('border-red-500');
+                    }
+                });
+                
+                // Optional: Clear error styling when user starts typing again
+                nicInput.addEventListener('input', function() {
+                    if (this.classList.contains('border-red-500')) {
+                        document.getElementById('nic-validation-message').classList.add('hidden');
+                        this.classList.remove('border-red-500');
+                    }
+                });
+            }
+
+            // Mobile number validation for format: 0112445789
+            const mobileInput = document.getElementById('mobile');
+            if (mobileInput) {
+                // Use blur instead of input to validate only when user leaves the field
+                mobileInput.addEventListener('blur', function() {
+                    const value = this.value.trim();
+                    const mobilePattern = /^0\d{9}$/;
+                    const mobileValidationMsg = document.getElementById('mobile-validation-message');
+                    
+                    if (value === '') {
+                        // Empty input - hide validation message
+                        mobileValidationMsg.classList.add('hidden');
+                        this.classList.remove('border-red-500', 'border-green-500');
+                    } else if (mobilePattern.test(value)) {
+                        // Valid format
+                        mobileValidationMsg.classList.add('hidden');
+                        this.classList.remove('border-red-500');
+                        this.classList.add('border-green-500');
+                    } else {
+                        // Invalid format
+                        mobileValidationMsg.textContent = 'Mobile number must be in format 0771234567 (10 digits starting with 0)';
+                        mobileValidationMsg.classList.remove('hidden');
+                        this.classList.remove('border-green-500');
+                        this.classList.add('border-red-500');
+                    }
+                });
+                
+                // Optional: Clear error styling when user starts typing again
+                mobileInput.addEventListener('input', function() {
+                    if (this.classList.contains('border-red-500')) {
+                        document.getElementById('mobile-validation-message').classList.add('hidden');
+                        this.classList.remove('border-red-500');
+                    }
+                });
+            }
+        });
+    </script>
 </div>
