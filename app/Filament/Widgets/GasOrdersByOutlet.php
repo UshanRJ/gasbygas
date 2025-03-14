@@ -8,6 +8,7 @@ use App\Models\Outlets;
 use App\Models\GasCategory;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
@@ -85,6 +86,7 @@ class GasOrdersByOutlet extends BaseWidget
                     ->badge()
                     ->sortable()
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->color(fn(string $state): string => match ($state) {
                         'pending' => 'warning',
                         'completed' => 'success',
@@ -99,6 +101,7 @@ class GasOrdersByOutlet extends BaseWidget
                     ->badge()
                     ->sortable()
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->color(fn(string $state): string => match ($state) {
                         'pending' => 'warning',
                         'completed' => 'success',
@@ -115,7 +118,7 @@ class GasOrdersByOutlet extends BaseWidget
                     }),
                 TextColumn::make('price')
                     ->label('Amount')
-                    ->money('INR')
+                    ->money('LKR')
                     ->sortable(),
             ])
             ->filters([
@@ -145,6 +148,20 @@ class GasOrdersByOutlet extends BaseWidget
                         'rescheduled' => 'Rescheduled',
                     ])
                     ->label('Order Status'),
+                SelectFilter::make('cylinder_status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'completed' => 'Completed',
+                    ])
+                    ->label('Cylinder Status'),
+                SelectFilter::make('payment_status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'completed' => 'Completed',
+                        'failed' => 'Failed',
+                        'refunded' => 'Refunded',
+                    ])
+                    ->label('Payment Status'),
                 SelectFilter::make('scheduled_date')
                     ->query(function (Builder $query, array $data) {
                         return $query->when($data['value'] === 'today', function ($query) {
@@ -188,15 +205,20 @@ class GasOrdersByOutlet extends BaseWidget
                     }),
             ])
             ->actions([
-                Action::make('View Order')
-                    ->url(fn(Order $record): string => OrderResource::getUrl('view', ['record' => $record]))
-                    ->color('info')
-                    ->icon('heroicon-o-eye'),
                 Action::make('Reschedule')
                     ->url(fn(Order $record): string => OrderResource::getUrl('edit', ['record' => $record]))
                     ->color('warning')
                     ->icon('heroicon-o-calendar'),
-                Tables\Actions\DeleteAction::make(),
+                ActionGroup::make([
+                    Action::make('View Order')
+                        ->url(fn(Order $record): string => OrderResource::getUrl('view', ['record' => $record]))
+                        ->color('info')
+                        ->icon('heroicon-o-eye'),
+                    Tables\Actions\DeleteAction::make(),
+                ])
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->label('Actions'),
+                
             ]);
     }
 }

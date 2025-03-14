@@ -20,7 +20,7 @@ class OrderItem extends Model
     }
 
     protected $casts = [
-        'scheduled_date' => 'date',
+        'scheduled_date' => 'date:Y-m-d',
     ];
 
 

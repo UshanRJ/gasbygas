@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 
 class OrderStatusByOutlet extends BaseWidget
 {
+    protected static string $view = 'filament.widgets.order-status-by-outlet';
+    
     protected int|string|array $columnSpan = 'full';
     
     // Property to store the selected outlet
@@ -18,26 +20,12 @@ class OrderStatusByOutlet extends BaseWidget
     // Method to handle outlet selection
     public function filterByOutlet($outletId): void
     {
-        $this->outletId = $outletId ?: null;
+        $this->outletId = $outletId === 'all' ? null : $outletId;
     }
     
-    // Override the getHeading method to include the dropdown directly in the widget
-    protected function getHeading(): string
+    public function getOutlets()
     {
-        return 'Order Status by Outlet';
-    }
-    
-    // Add extra headers - this is the Filament 3 way to add components to headers
-    protected function getExtraHeaderComponents(): array
-    {
-        $outlets = Outlets::orderBy('name')->pluck('name', 'id')->toArray();
-        
-        return [
-            view('filament.widgets.outlet-dropdown', [
-                'outlets' => $outlets,
-                'outletId' => $this->outletId,
-            ]),
-        ];
+        return Outlets::orderBy('name')->pluck('name', 'id')->toArray();
     }
     
     protected function getStats(): array
@@ -87,7 +75,7 @@ class OrderStatusByOutlet extends BaseWidget
 
         // Get outlet name if selected
         $outletName = $this->outletId
-            ? Outlets::find($this->outletId)?->name
+            ? Outlets::find($this->outletId)->name
             : 'All Outlets';
 
         // Create stat objects for each status
@@ -96,7 +84,7 @@ class OrderStatusByOutlet extends BaseWidget
             $count = $statusCounts[$status] ?? 0;
             
             $stats[] = Stat::make($config['label'], $count)
-                ->description("$outletName")
+                ->description($outletName)
                 ->icon($config['icon'])
                 ->color($config['color']);
         }
@@ -104,7 +92,7 @@ class OrderStatusByOutlet extends BaseWidget
         // Add total orders stat
         $totalOrders = array_sum($statusCounts);
         $stats[] = Stat::make('Total Orders', $totalOrders)
-            ->description("$outletName")
+            ->description($outletName)
             ->icon('heroicon-o-shopping-bag')
             ->color('gray');
 

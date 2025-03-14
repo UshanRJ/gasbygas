@@ -355,16 +355,6 @@ class OrderGasPage extends Component
             
             \Log::info('Order item created with ID: ' . ($orderItem->id ?? 'NULL - Order item not created'));
             
-            // Update stock in OutletProduct table (decrement by 1)
-            $outletProduct = OutletProduct::where('outlet_id', $this->selectedOutletId)
-                ->where('product_id', $this->selectedProductId)
-                ->first();
-                
-            if ($outletProduct) {
-                $outletProduct->stock = $outletProduct->stock - 1;
-                $outletProduct->save();
-                \Log::info('Updated stock for product at outlet. New stock: ' . $outletProduct->stock);
-            }
             
             // Log success
             \Log::info('Order placed successfully by user: ' . $user->id);

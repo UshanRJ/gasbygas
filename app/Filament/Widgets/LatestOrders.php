@@ -95,7 +95,7 @@ class LatestOrders extends BaseWidget
                 ->url(fn(Order $record):string=> OrderResource::getUrl('view',['record'=>$record]))
                 ->color('info')
                 ->icon('heroicon-o-eye'),
-                Tables\Actions\DeleteAction::make(),
+                // Tables\Actions\DeleteAction::make(),
             ]);
     }
 }
