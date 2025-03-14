@@ -128,32 +128,45 @@ class ScheduleResource extends Resource
                         // Save the record first
                         $record->save();
 
-                        // If status changed to approved, update outlet product stock
-                        // if ($state === 'approved') {
-                        //     // Find or create outlet product record
-                        //     $outletProduct = \App\Models\OutletProduct::firstOrNew([
-                        //         'outlet_id' => $record->outlet_id,
-                        //         'product_id' => $record->product_id,
-                        //     ]);
-            
-                        //     // If this is a new record, set initial stock to 0
-                        //     if (!$outletProduct->exists) {
-                        //         $outletProduct->stock = 0;
-                        //     }
-            
-                        //     // Add schedule quantity to stock
-                        //     $outletProduct->stock += $record->quantity;
-            
-                        //     // Save the outlet product
-                        //     $outletProduct->save();
-            
-                        //     // Show notification
-                        //     \Filament\Notifications\Notification::make()
-                        //         ->title('Stock Updated')
-                        //         ->body("Added {$record->quantity} units to outlet stock")
-                        //         ->success()
-                        //         ->send();
-                        // }
+                        // We'll handle the status changed to approved through the ScheduleObserver
+                        // This prevents double stock updates
+                        if ($state === 'approved') {
+                            // Just show a notification in the UI
+                            \Filament\Notifications\Notification::make()
+                                ->title('Status Updated')
+                                ->body("Schedule has been approved")
+                                ->success()
+                                ->send();
+                        }
+
+                        // If status changed to cancelled from approved, deduct from stock
+                        if ($state === 'cancelled' && $record->getOriginal('status') === 'approved') {
+                            // Find the outlet product
+                            $outletProduct = \App\Models\OutletProduct::where([
+                                'outlet_id' => $record->outlet_id,
+                                'product_id' => $record->product_id,
+                            ])->first();
+
+                            if ($outletProduct) {
+                                // Deduct the quantity
+                                $outletProduct->stock -= $record->quantity;
+
+                                // Ensure stock doesn't go below zero
+                                if ($outletProduct->stock < 0) {
+                                    $outletProduct->stock = 0;
+                                }
+
+                                // Save the outlet product
+                                $outletProduct->save();
+
+                                // Show notification
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Stock Updated')
+                                    ->body("Deducted {$record->quantity} units from outlet stock")
+                                    ->warning()
+                                    ->send();
+                            }
+                        }
                     }),
                 Tables\Columns\TextColumn::make('scheduled_date')
                     ->numeric()
@@ -178,11 +191,74 @@ class ScheduleResource extends Resource
                     DeleteAction::make()
                         ->disabled(fn($record) => $record->status === 'approved')
                         ->tooltip(fn($record) => $record->status === 'approved' ? 'Approved schedules cannot be deleted' : null)
+                        ->before(function ($record) {
+                            // If schedule is in approved status, deduct from stock before deletion
+                            if ($record->status === 'approved') {
+                                // Find the outlet product
+                                $outletProduct = \App\Models\OutletProduct::where([
+                                    'outlet_id' => $record->outlet_id,
+                                    'product_id' => $record->product_id,
+                                ])->first();
+
+                                if ($outletProduct) {
+                                    // Deduct the quantity
+                                    $outletProduct->stock -= $record->quantity;
+
+                                    // Ensure stock doesn't go below zero
+                                    if ($outletProduct->stock < 0) {
+                                        $outletProduct->stock = 0;
+                                    }
+
+                                    // Save the outlet product
+                                    $outletProduct->save();
+
+                                    // Show notification
+                                    \Filament\Notifications\Notification::make()
+                                        ->title('Stock Updated')
+                                        ->body("Deducted {$record->quantity} units from outlet stock")
+                                        ->warning()
+                                        ->send();
+                                }
+                            }
+                        }),
                 ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->before(function ($records) {
+                            // Process each record
+                            $records->each(function ($record) {
+                                // If schedule is in approved status, deduct from stock before deletion
+                                if ($record->status === 'approved') {
+                                    // Find the outlet product
+                                    $outletProduct = \App\Models\OutletProduct::where([
+                                        'outlet_id' => $record->outlet_id,
+                                        'product_id' => $record->product_id,
+                                    ])->first();
+
+                                    if ($outletProduct) {
+                                        // Deduct the quantity
+                                        $outletProduct->stock -= $record->quantity;
+
+                                        // Ensure stock doesn't go below zero
+                                        if ($outletProduct->stock < 0) {
+                                            $outletProduct->stock = 0;
+                                        }
+
+                                        // Save the outlet product
+                                        $outletProduct->save();
+                                    }
+                                }
+                            });
+
+                            // Show a single notification for all updates
+                            \Filament\Notifications\Notification::make()
+                                ->title('Stock Updated')
+                                ->body("Stock has been adjusted for deleted schedules")
+                                ->warning()
+                                ->send();
+                        }),
                 ]),
             ]);
     }

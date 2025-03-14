@@ -47,6 +47,10 @@ Route::middleware('guest')->group(function () {
     Route::get("/reset", ResetPasswordPage::class)->name('password.request');
 });
 
+Route::get('/offline', action: function () {
+    return view('offline');
+});
+
 // Auth routes that require authentication
 Route::middleware('auth')->group(function () {
 

@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\OrderItem;
 use App\Models\OutletProduct;
+use App\Notifications\OrderStatusUpdated;
 use Illuminate\Support\Facades\Log;
 
 class OrderItemObserver
@@ -27,6 +28,43 @@ class OrderItemObserver
             $this->deductOutletProductStock($orderItem);
         } else {
             Log::info("No stock deduction for OrderItem {$orderItem->id} as order status is {$order->status}");
+        }
+    }
+
+    /**
+     * Handle the OrderItem "updated" event.
+     */
+    public function updated(OrderItem $orderItem): void
+    {
+        // Check if scheduled_date was changed
+        if ($orderItem->isDirty('scheduled_date')) {
+            // Get the order
+            $order = $orderItem->order;
+            
+            // Get the user
+            $user = $order ? $order->user : null;
+            
+            // Only send notification if we have a user and an order
+            if ($user && $order) {
+                Log::info("Scheduled date changed for OrderItem {$orderItem->id}. Sending notification to user {$user->id}");
+                
+                try {
+                    // Send notification with status 'rescheduled' to indicate the date change
+                    $user->notify(new OrderStatusUpdated($order, 'rescheduled'));
+                    
+                    Log::info("Scheduled date change notification sent successfully for OrderItem {$orderItem->id}");
+                } catch (\Exception $e) {
+                    Log::error("Failed to send scheduled date change notification: " . $e->getMessage(), [
+                        'order_id' => $order->id,
+                        'user_id' => $user->id,
+                        'scheduled_date' => $orderItem->scheduled_date
+                    ]);
+                }
+            } else {
+                Log::warning("Cannot send scheduled date change notification: " . 
+                    (!$order ? "Order not found" : "User not found") . 
+                    " for OrderItem {$orderItem->id}");
+            }
         }
     }
 

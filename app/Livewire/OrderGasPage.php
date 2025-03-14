@@ -7,6 +7,7 @@ use App\Models\Outlets;
 use App\Models\Products;
 use App\Models\Order;
 use App\Models\User;
+use App\Models\OutletProduct;
 use Illuminate\Auth\Authenticatable;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -139,21 +140,12 @@ class OrderGasPage extends Component
             return $product->category_id == $categoryId;
         });
 
-        // Step 2: Prepare to check stock in selected outlet
+        // Step 2: Filter by stock availability in selected outlet
         if ($this->selectedOutletId) {
-            $outlet = Outlets::find($this->selectedOutletId);
-            
-            // If outlet is selected, further filter by stock availability
-            if ($outlet) {
-                $this->filteredProducts = $categoryFilteredProducts->filter(function ($product) use ($outlet) {
-                    // Check if product is in stock at the selected outlet
-                    // This would need a relationship or method to check stock levels
-                    // The implementation will depend on your database structure
-                    return $this->isProductInStockAtOutlet($product->id, $outlet->id);
-                });
-            } else {
-                $this->filteredProducts = $categoryFilteredProducts;
-            }
+            $this->filteredProducts = $categoryFilteredProducts->filter(function ($product) {
+                // Check if product is in stock at the selected outlet
+                return $this->isProductInStockAtOutlet($product->id, $this->selectedOutletId);
+            });
         } else {
             $this->filteredProducts = $categoryFilteredProducts;
         }
@@ -165,7 +157,7 @@ class OrderGasPage extends Component
     }
     
     /**
-     * Check if a product is in stock at a specific outlet
+     * Check if a product is in stock at a specific outlet using OutletProduct table
      *
      * @param int $productId
      * @param int $outletId
@@ -173,19 +165,11 @@ class OrderGasPage extends Component
      */
     private function isProductInStockAtOutlet($productId, $outletId)
     {
-        // This implementation depends on your database structure
-        // You might have a stock table or a relationship between products and outlets
-        // Here's a basic example assuming you have a stock table:
-        
-        // Example: 
-        // return \App\Models\Stock::where('product_id', $productId)
-        //     ->where('outlet_id', $outletId)
-        //     ->where('quantity', '>', 0)
-        //     ->exists();
-        
-        // If you don't have a dedicated stock table, you might need to check another way
-        // For now, let's assume all products are in stock at all outlets
-        return true;
+        // Query the OutletProduct table to check if the product has stock > 0
+        return OutletProduct::where('product_id', $productId)
+            ->where('outlet_id', $outletId)
+            ->where('stock', '>', 0)
+            ->exists();
     }
 
     /**
@@ -315,6 +299,12 @@ class OrderGasPage extends Component
                 'selectedOutletId.required' => 'Please select a gas outlet',
             ]);
             
+            // Validate that product is still in stock (double check)
+            if (!$this->isProductInStockAtOutlet($this->selectedProductId, $this->selectedOutletId)) {
+                session()->flash('error', 'Sorry, this product is no longer in stock at the selected outlet.');
+                return null;
+            }
+            
             \Log::info('Validation passed');
             
             // Generate unique order token
@@ -334,7 +324,7 @@ class OrderGasPage extends Component
             \Log::info('Creating order with outlet ID: ' . $this->selectedOutletId . ', grand total: ' . $this->grandTotal);
             
             // Create order record
-            $order = \App\Models\Order::create([
+            $order = Order::create([
                 'user_id' => $user->id,
                 'outlet_id' => $this->selectedOutletId,
                 'price' => $this->grandTotal,
@@ -364,6 +354,17 @@ class OrderGasPage extends Component
             ]);
             
             \Log::info('Order item created with ID: ' . ($orderItem->id ?? 'NULL - Order item not created'));
+            
+            // Update stock in OutletProduct table (decrement by 1)
+            $outletProduct = OutletProduct::where('outlet_id', $this->selectedOutletId)
+                ->where('product_id', $this->selectedProductId)
+                ->first();
+                
+            if ($outletProduct) {
+                $outletProduct->stock = $outletProduct->stock - 1;
+                $outletProduct->save();
+                \Log::info('Updated stock for product at outlet. New stock: ' . $outletProduct->stock);
+            }
             
             // Log success
             \Log::info('Order placed successfully by user: ' . $user->id);
